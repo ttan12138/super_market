@@ -1,33 +1,41 @@
 <template>
-  <div id="home">
+  <div id="home" class="wrapper">
     <nav-bar class="home-nav"><div slot="center">购物车</div></nav-bar>
+    <tab-control class="tab-control"
+                 :titles="['流行','最新','精品']"
+                 @tabClick="tabClick"
+                 ref="tabControl1" v-show="isTabFixed"/>
     <scroll class="content"
             ref="scroll"
             :probe-type="3"
-            @scroll="contentScroll"
             :pull-up-load="true"
+            @scroll="contentScroll"
             @pullingUp="loadMore">
-      <home-swiper :banners="banners"/>
+      <home-swiper :banners="banners"
+                    @imageLoad="swiperLoad"/>
       <home-recommend-view :recommends="recommends" />
       <home-feature-view />
-      <tab-control class="tab-control"
-                   :titles="['流行','最新','精品']"
-                   @tabClick="tabClick"/>
+      <tab-control :titles="['流行','最新','精品']"
+                   @tabClick="tabClick"
+                   ref="tabControl2"/>
       <goods-list :goods="showGoods" />
     </scroll>
+    <back-top @backTopClick="backTopClick" v-show="isShowBackTop"/>
   </div>
 </template>
 
 <script>
-  import NavBar from '../../components/common/navbar/NavBar.vue'
-  import {getHomeMultidata, getHomeGoods} from "../../network/home";
+  import NavBar from 'components/common/navbar/NavBar.vue'
   import HomeSwiper from './childComps/HomeSwiper'
-  import HomeRecommendView  from "./childComps/HomeRecommendView";
-  import HomeFeatureView from "./childComps/HomeFeatureView";
-  // import BackTop from '../../components/content/backTop/BackTop'
-  import TabControl from "../../components/content/tabcontrol/TabControl"
-  import GoodsList from "../../components/content/goods/GoodsList";
-  import Scroll from "../../components/common/scroll/Scroll"
+  import HomeRecommendView  from "./childComps/HomeRecommendView"
+  import HomeFeatureView from "./childComps/HomeFeatureView"
+  import TabControl from "components/content/tabcontrol/TabControl"
+  import GoodsList from "components/content/goods/GoodsList"
+  import {getHomeMultidata, getHomeGoods} from "../../network/home"
+  import Scroll from "components/common/scroll/Scroll"
+  import BackTop from "components/content/backTop/BackTop"
+  import { debounce } from "common/utils.js"
+
 
   export default {
       name: "Home",
@@ -39,6 +47,7 @@
         TabControl,
         GoodsList,
         Scroll,
+        BackTop
       },
       data() {
         return {
@@ -50,7 +59,10 @@
             'sell': {page: 0, list: []},
           },
           currentType: 'pop',
-          isShowBackTop: false
+          isShowBackTop: false,
+          tabOffsetTop: 534,
+          isTabFixed: false,
+          saveY: 0
         }
       },
       computed: {
@@ -59,13 +71,20 @@
         }
       },
       created() {
-        // 1.请求多个数据
+        // 请求轮播图等数据
         this.getHomeMultidata()
 
-        // 2.请求商品数据
+        // 请求商品数据
         this.getHomeGoods('pop')
         this.getHomeGoods('new')
         this.getHomeGoods('sell')
+      },
+      mounted() {
+        const refresh = debounce(this.$refs.scroll.refresh, 500)
+        //监听item图片加载完成
+        this.$bus.$on('itemImageLoad', () => {
+          refresh()
+        })
       },
       methods: {
         /**
@@ -83,15 +102,24 @@
               this.currentType = 'sell'
               break
           }
+          this.$refs.tabControl1.currentIndex = index
+          this.$refs.tabControl2.currentIndex = index
         },
-        backClick() {
-          this.$refs.scroll.scrollTo(0, 0)
+        backTopClick(){
+          this.$refs.scroll.scrollTo(0,0,500)
         },
-        contentScroll(position) {
-          this.isShowBackTop = (-position.y) > 1000
+        contentScroll(position){
+          //是否显示backtop按钮
+          this.isShowBackTop = (-position.y) >1000
+
+          this.isTabFixed = (-position.y) > this.tabOffsetTop
+
         },
-        loadMore() {
+        loadMore(){
           this.getHomeGoods(this.currentType)
+        },
+        swiperLoad(){
+          this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop
         },
         /**
          * 网络请求相关的方法
@@ -112,15 +140,46 @@
             this.$refs.scroll.finishPullUp()
           })
         }
-      }
+      },
+    activated(){
+      this.$refs.scroll.scrollTo(0, this.saveY, 0)
+      this.$refs.scroll.refresh()
+    },
+    deactivated(){
+      this.saveY = this.$refs.scroll.getScrollY()
+    }
   }
 
 </script>
 
-<style>
+<style scoped>
+  #home {
+    height: 100vh;
+    position: relative;
+  }
+
   .home-nav {
-    background: #ff5777;
-    color: #fffdee;
+    background-color: var(--color-tint);
+    color: #fff;
+
+    /*position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 9;*/
+  }
+
+  .content {
+    overflow: hidden;
+    /*height: calc(100% - 93px);
+    margin-top: 44px;*/
+    position: absolute;
+    top: 44px;
+    bottom: 49px;
+  }
+
+  .tab-control {
+    position: relative;
+    z-index: 9;
   }
 </style>
-  console.log (goods)

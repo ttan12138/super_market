@@ -1,6 +1,6 @@
 <template>
   <div class="goods-item">
-    <img :src="showImage" alt=""/>
+    <img :src="showImage" alt="" @load="imageLoad" @click="itemClick"/>
     <div class="goods-info">
       <p>{{goodsItem.title}}</p>
       <span class="price">{{goodsItem.price}}</span>
@@ -24,6 +24,15 @@
       showImage() {
         return this.goodsItem.show.img || this.goodsItem.image
       }
+    },
+    methods: {
+      imageLoad() {
+        this.$bus.$emit('itemImageLoad')
+      },
+      itemClick(){
+        // console.log("跳转详情页")
+        this.$router.push('detail')
+      }
     }
   }
 </script>
@@ -32,13 +41,12 @@
   .goods-item {
     padding-bottom: 40px;
     position: relative;
-
     width: 48%;
   }
 
   .goods-item img {
     width: 100%;
-    boder-radius: 5px;
+    border-radius: 5px;
   }
 
   .goods-info {
@@ -52,7 +60,7 @@
   }
 
   .goods-info p {
-    overfloat: hidden;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     margin-bottom: 3px;

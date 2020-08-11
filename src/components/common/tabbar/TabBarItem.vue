@@ -34,7 +34,7 @@
       activeStyle() {
         return this.isActive ? {color: this.activeColor} : {}
       }
-      
+
     },
     methods: {
       itemClick() {
@@ -53,10 +53,10 @@
   }
   .tab-bar-item img {
     height: 24px;
-    weight: 24px;
+    width: 24px;
     margin-top: 3px;
     vertical-align: middle;
     margin-bottom: 2px;
   }
-  
+
 </style>

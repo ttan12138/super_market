@@ -27,6 +27,6 @@ import GoodsListItem from './GoodsListItem'
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
-    padding: 2px;
+    padding: 8px;
   }
 </style>

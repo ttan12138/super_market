@@ -8,7 +8,7 @@
 
 <script>
   export default {
-    name: "NvaBar"
+    name: "NavBar"
   }
 </script>
 
@@ -18,7 +18,7 @@
     display: flex;
     height: 44px;
     line-height: 44px;
-    box-shadow: 0px  4px 1px rgba(100,100,100,0.2);
+    box-shadow: 0  4px 1px rgba(100,100,100,0.2);
   }
   .left,.right {
     width: 17%;
