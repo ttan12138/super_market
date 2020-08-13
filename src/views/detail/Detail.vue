@@ -1,19 +1,29 @@
 <template>
   <div id="detail">
-    <detail-nav-bar></detail-nav-bar>
-    <detail-swiper :top-images="topImages"></detail-swiper>
-    <detail-base-info :goods="goods"></detail-base-info>
-    <detail-shop-info :shop="shop"></detail-shop-info>
+    <detail-nav-bar class="detail-navbar"/>
+    <scroll class="content" ref="scroll">
+      <detail-swiper :top-images="topImages" />
+      <detail-base-info :goods="goods" />
+      <detail-shop-info :shop="shop" />
+      <detail-goods-info :detail-info="detailInfo" @imgLoad="imgLoad" />
+      <detail-param-info :param-info="paramInfo"/>
+      <detail-comment-info :comment-info="commentInfo" :is-comment="isComment" />
+      <detail-recommend-info :recommend-list="recommendList"/>
+    </scroll>
   </div>
 </template>
 
 <script>
-
   import DetailNavBar from "./childComps/DetailNavBar"
   import DetailSwiper from "./childComps/DetailSwiper"
   import DetailBaseInfo from "./childComps/DetailBaseInfo"
   import DetailShopInfo from "./childComps/DetailShopInfo"
-  import {getDetail, Goods, Shop} from "network/detail"
+  import DetailGoodsInfo from "./childComps/DetailGoodsInfo"
+  import DetailParamInfo from "./childComps/DetailParamInfo"
+  import DetailCommentInfo from "./childComps/DetailCommentInfo"
+  import DetailRecommendInfo from "./childComps/DetailRecommendInfo"
+  import Scroll from "components/common/scroll/Scroll"
+  import {getDetail, getRecommend, Goods, Shop, GoodsParam} from "network/detail"
 
   export default {
     name: "Detail",
@@ -21,14 +31,24 @@
       DetailNavBar,
       DetailSwiper,
       DetailBaseInfo,
-      DetailShopInfo
+      DetailShopInfo,
+      DetailGoodsInfo,
+      DetailParamInfo,
+      DetailCommentInfo,
+      DetailRecommendInfo,
+      Scroll
     },
     data() {
       return {
         iid: null,
         topImages: [],
         goods: {},
-        shop: {}
+        shop: {},
+        detailInfo: {},
+        paramInfo: {},
+        commentInfo: {},
+        isComment: false,
+        recommendList: []
       }
     },
     created(){
@@ -39,6 +59,8 @@
       //根据iid获取信息
       this.getDetail()
 
+      //获取推荐信息
+      this.getRecommend()
     },
     mounted() {
     },
@@ -46,6 +68,9 @@
       /**
        * 事件监听
        */
+      imgLoad() {
+        this.$refs.scroll.refresh()
+      },
       /**
        * 获取数据
        */
@@ -63,6 +88,25 @@
 
           //获取店铺信息
           this.shop = new Shop(result.shopInfo)
+
+          //获取商品详细信息
+          this.detailInfo = result.detailInfo
+
+          //获取商品参数信息
+          this.paramInfo = new GoodsParam(result.itemParams.info, result.itemParams.rule)
+
+          //获取评论信息
+          if(result.rate.cRate !== 0) {
+            this.isComment = true
+            this.commentInfo = result.rate.list[0]
+          }
+        })
+      },
+
+      getRecommend() {
+        getRecommend().then((res, error) => {
+          if (error) return
+          this.recommendList = res.data.list
         })
       }
     }
@@ -71,8 +115,17 @@
 
 <style scoped>
   #detail {
+    height: 100vh;
     position: relative;
     z-index: 9;
     background-color: #fff;
+  }
+  .detail-navbar {
+    position: relative;
+    z-index: 9;
+    background-color: #fff;
+  }
+  .content {
+    height: calc(100% - 44px);
   }
 </style>
