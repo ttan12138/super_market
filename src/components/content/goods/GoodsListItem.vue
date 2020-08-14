@@ -27,7 +27,13 @@
     },
     methods: {
       imageLoad() {
+        /*if(this.$route.path.indexOf('/home')) {
+          this.$bus.$emit('homeItemImageLoad')
+        }else if (this.$route.path.indexOf('/detail')) {
+          this.$bus.$emit('detailItemImageLoad')
+        }*/
         this.$bus.$emit('itemImageLoad')
+
       },
       itemClick(){
         // console.log("跳转详情页")

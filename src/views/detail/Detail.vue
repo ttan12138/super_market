@@ -1,15 +1,17 @@
 <template>
   <div id="detail">
-    <detail-nav-bar class="detail-navbar"/>
-    <scroll class="content" ref="scroll">
-      <detail-swiper :top-images="topImages" />
+    <detail-nav-bar class="detail-navbar" @titleClick="titleClick" :curr-index="currIndex"/>
+    <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll">
+      <detail-swiper :top-images="topImages" @imgLoad="imgLoad"/>
       <detail-base-info :goods="goods" />
       <detail-shop-info :shop="shop" />
       <detail-goods-info :detail-info="detailInfo" @imgLoad="imgLoad" />
-      <detail-param-info :param-info="paramInfo"/>
-      <detail-comment-info :comment-info="commentInfo" :is-comment="isComment" />
-      <detail-recommend-info :recommend-list="recommendList"/>
+      <detail-param-info ref="params" :param-info="paramInfo"/>
+      <detail-comment-info ref="comment" :comment-info="commentInfo" :is-comment="isComment" />
+      <detail-recommend-info ref="recommend" :recommend-list="recommendList"/>
     </scroll>
+    <back-top @backTopClick="backTopClick" v-show="isShowBackTop" />
+    <detail-bottom-bar @addToCart="addToCart"/>
   </div>
 </template>
 
@@ -22,8 +24,12 @@
   import DetailParamInfo from "./childComps/DetailParamInfo"
   import DetailCommentInfo from "./childComps/DetailCommentInfo"
   import DetailRecommendInfo from "./childComps/DetailRecommendInfo"
+  import DetailBottomBar from "./childComps/DetailBottomBar"
   import Scroll from "components/common/scroll/Scroll"
   import {getDetail, getRecommend, Goods, Shop, GoodsParam} from "network/detail"
+  import {itemListenerMixin, backTopMixin} from "common/mixin"
+  import {debounce} from "../../common/utils"
+  import {BACKTOP_DISTANCE} from "common/const"
 
   export default {
     name: "Detail",
@@ -36,8 +42,10 @@
       DetailParamInfo,
       DetailCommentInfo,
       DetailRecommendInfo,
+      DetailBottomBar,
       Scroll
     },
+    mixins: [itemListenerMixin, backTopMixin],
     data() {
       return {
         iid: null,
@@ -48,7 +56,10 @@
         paramInfo: {},
         commentInfo: {},
         isComment: false,
-        recommendList: []
+        recommendList: [],
+        themeTopYs: [],
+        getThemeTopY: null,
+        currIndex: 0,
       }
     },
     created(){
@@ -61,15 +72,55 @@
 
       //获取推荐信息
       this.getRecommend()
+
+      //获取标题内容联动高度元素
+      this.getThemeTopY = debounce(() => {
+        this.themeTopYs = []
+        this.themeTopYs.push(0)
+        this.themeTopYs.push(this.$refs.params.$el.offsetTop)
+        this.themeTopYs.push(this.$refs.comment.$el.offsetTop)
+        this.themeTopYs.push(this.$refs.recommend.$el.offsetTop)
+        this.themeTopYs.push(Number.MAX_VALUE)
+      },100)
     },
-    mounted() {
+    destroyed() {
+      this.$bus.$off('itemImageLoad')
     },
     methods: {
       /**
        * 事件监听
        */
       imgLoad() {
-        this.$refs.scroll.refresh()
+        this.refresh()
+        this.getThemeTopY()
+      },
+      titleClick(index) {
+        // console.log(index)
+        this.$refs.scroll.scrollTo(0, -this.themeTopYs[index] + 44, 1000)
+      },
+      contentScroll(position) {
+
+        const positionY = -position.y + 45
+        for(let i in this.themeTopYs) {
+          if(positionY >= this.themeTopYs[parseInt(i)] && positionY < this.themeTopYs[parseInt(i) + 1]){
+              this.currIndex = parseInt(i)
+          }
+        }
+
+        this.isShowBackTop = (-position.y) > BACKTOP_DISTANCE
+      },
+      addToCart() {
+        //获取购物车中展示的信息
+        const product = {}
+        product.iid = this.iid
+        product.image = this.topImages[0]
+        product.title = this.goods.title
+        product.desc = this.goods.desc
+        product.price = this.goods.realPrice
+        // console.log(product)
+
+        //将商品添加到购物车
+        this.$store.dispatch('addToCart', product)
       },
       /**
        * 获取数据
@@ -100,6 +151,11 @@
             this.isComment = true
             this.commentInfo = result.rate.list[0]
           }
+
+          //dom渲染完成执行
+          this.$nextTick(() => {
+
+          })
         })
       },
 

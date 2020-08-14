@@ -33,9 +33,7 @@
   import GoodsList from "components/content/goods/GoodsList"
   import {getHomeMultidata, getHomeGoods} from "../../network/home"
   import Scroll from "components/common/scroll/Scroll"
-  import BackTop from "components/content/backTop/BackTop"
-  import { debounce } from "common/utils.js"
-
+  import {itemListenerMixin, backTopMixin} from "common/mixin";
 
   export default {
       name: "Home",
@@ -47,8 +45,8 @@
         TabControl,
         GoodsList,
         Scroll,
-        BackTop
       },
+      mixins: [itemListenerMixin,backTopMixin],
       data() {
         return {
           banners: [],
@@ -59,10 +57,9 @@
             'sell': {page: 0, list: []},
           },
           currentType: 'pop',
-          isShowBackTop: false,
           tabOffsetTop: 534,
           isTabFixed: false,
-          saveY: 0
+          saveY: 0,
         }
       },
       computed: {
@@ -78,13 +75,6 @@
         this.getHomeGoods('pop')
         this.getHomeGoods('new')
         this.getHomeGoods('sell')
-      },
-      mounted() {
-        const refresh = debounce(this.$refs.scroll.refresh, 500)
-        //监听item图片加载完成
-        this.$bus.$on('itemImageLoad', () => {
-          refresh()
-        })
       },
       methods: {
         /**
@@ -104,9 +94,6 @@
           }
           this.$refs.tabControl1.currentIndex = index
           this.$refs.tabControl2.currentIndex = index
-        },
-        backTopClick(){
-          this.$refs.scroll.scrollTo(0,0,500)
         },
         contentScroll(position){
           //是否显示backtop按钮
@@ -146,7 +133,11 @@
       this.$refs.scroll.refresh()
     },
     deactivated(){
+      //保存离开时Y值
       this.saveY = this.$refs.scroll.getScrollY()
+
+      //取消图片加载全局事件监听
+      this.$bus.$off('homeItemImageLoad', this.homeItemListener)
     }
   }
 

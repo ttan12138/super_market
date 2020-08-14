@@ -25,7 +25,7 @@
       }
     },
     created() {
-      console.log(this.recommendList)
+
     }
   }
 </script>
