@@ -12,6 +12,7 @@
     </scroll>
     <back-top @backTopClick="backTopClick" v-show="isShowBackTop" />
     <detail-bottom-bar @addToCart="addToCart"/>
+<!--    <toast :message="message" :show="isShowToast"></toast>-->
   </div>
 </template>
 
@@ -25,7 +26,9 @@
   import DetailCommentInfo from "./childComps/DetailCommentInfo"
   import DetailRecommendInfo from "./childComps/DetailRecommendInfo"
   import DetailBottomBar from "./childComps/DetailBottomBar"
+
   import Scroll from "components/common/scroll/Scroll"
+  // import Toast from "components/common/toast/Toast"  //自封装toast-引入
   import {getDetail, getRecommend, Goods, Shop, GoodsParam} from "network/detail"
   import {itemListenerMixin, backTopMixin} from "common/mixin"
   import {debounce} from "../../common/utils"
@@ -43,7 +46,8 @@
       DetailCommentInfo,
       DetailRecommendInfo,
       DetailBottomBar,
-      Scroll
+      Scroll,
+      // Toast
     },
     mixins: [itemListenerMixin, backTopMixin],
     data() {
@@ -60,6 +64,8 @@
         themeTopYs: [],
         getThemeTopY: null,
         currIndex: 0,
+        // message: '',       //自封装toast-属性
+        // isShowToast: false
       }
     },
     created(){
@@ -120,7 +126,18 @@
         // console.log(product)
 
         //将商品添加到购物车
-        this.$store.dispatch('addToCart', product)
+        this.$store.dispatch('addToCart', product).then(res => {
+        // this.addToCart(product).then(res => {
+          //自封装toast
+          /*this.message = res
+          this.isShowToast = true
+          setInterval(() => {
+            this.isShowToast = false
+          },3000)*/
+          console.log(this.$toast)
+          this.$toast.show(res, 5000)
+
+        })
       },
       /**
        * 获取数据

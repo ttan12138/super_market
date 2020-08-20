@@ -1,7 +1,7 @@
 <template>
   <div class="recommend-info">
     <div class="info-header">热门推荐</div>
-    <grid-view>
+    <grid-view class="grid-view">
       <goods-list :goods="recommendList" ></goods-list>
     </grid-view>
   </div>
@@ -33,6 +33,10 @@
 <style scoped>
   .recommend-info {
     padding: 5px;
+  }
+
+  .grid-view {
+    width: 100%;
   }
 
   .info-header {

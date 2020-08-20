@@ -16,7 +16,7 @@
   export default {
     name: 'TabBarItem',
     props: {
-      path: String,
+      path: Array,
       activeColor: {
         type: String,
         default: 'red'
@@ -29,7 +29,13 @@
     },
     computed: {
       isActive() {
-        return this.$route.path.indexOf(this.path) !== -1
+        let pathScode = 0
+        for(let i = 0; i < this.path.length; i++){
+          if(this.$route.path.indexOf(this.path[i]) !== 0){
+            pathScode++
+          }
+        }
+        return !pathScode
       },
       activeStyle() {
         return this.isActive ? {color: this.activeColor} : {}
@@ -38,7 +44,7 @@
     },
     methods: {
       itemClick() {
-        this.$router.replace(this.path)
+        this.$router.replace(this.path[0])
       }
     }
   }
